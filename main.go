@@ -1,56 +1,76 @@
 package main
 
 import (
-	"fmt"
+	"compress/gzip"
 	//"encoding/json"
-	"net/http"
+	"flag"
+	"fmt"
 	"io"
+	"net/http"
 	"os"
 )
 
-type BF1_GetMatchID struct {
-	data struct {
-		matches []struct {
-			attributes struct {
-				id 			string	 `json:"id"`
-			}  			`json:"attributes"`
-		    metadata 	struct {
-                serverName  string 	 `json:"serverName"`
-			}  			`json:"metadata"`
-			}       `json:"matches"`
-	}       `json:"data"`
+type matches struct {
+	Data struct {
+		Matches []struct {
+			Attributes struct {
+				ID string `json:"id"`
+			} `json:"attributes"`
+		} `json:"matches"`
+	} `json:"data"`
 }
 
 func main() {
+	display_name := "SHlSAN13"
+	fmt.Println("Proxy is set:", use_proxy())
+	fmt.Println(get_match_id(display_name))
+	//data := matches{}
+	//json.Unmarshal([]byte(body), &data)
+	//fmt.Printf("The most recent match id: %s", data.Data.Matches[0].Attributes.ID)
+}
+
+func use_proxy() bool {
+	proxy := flag.String("proxy", "", "Set http proxy host. Format: host:port")
+	flag.Parse()
+	if *proxy != "" {
+		os.Setenv("HTTP_PROXY", *proxy)
+		os.Setenv("HTTPS_PROXY", *proxy)
+		return true
+	} else {
+		return false
+	}
+}
+
+func get_match_id(display_name string) []byte {
 	method := "GET"
-	url := "https://api.tracker.gg/api/v2/bf1/standard/profile/origin/wuhutakeoffyoo"
-	os.Setenv("HTTP_PROXY", "http://127.0.0.1:10809")
-	os.Setenv("HTTPS_PROXY", "http://127.0.0.1:10809")
+	url := "https://api.tracker.gg/api/v2/bf1/standard/matches/origin/" + display_name
 	client := &http.Client{}
 	req, err := http.NewRequest(method, url, nil)
-	req.Header.Add("Host", "api.tracker.gg")
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Accept-Encoding", "gzip")
-	req.Header.Add("Accept", "*/*")
-	req.Header.Add("Connection", "keep-alive")
-	//req.Header.Add("", "")
-	req.Header.Add("User-Agent", "Tracker Network App/3.22.9")
-	req.Header.Add("x-app-version", "3.22.9")
-	fmt.Printf("Sending request.\n")
+	if err != nil {
+		panic(err) // handle error
+	}
+	req.Header = http.Header{
+		"Host":            {"api.tracker.gg"},
+		"Content-Type":    {"application/json"},
+		"Accept-Encoding": {"gzip"},
+		"User-Agent":      {"Tracker Network App/3.22.9"},
+		"x-app-version":   {"3.22.9"},
+	}
+	fmt.Println("Sending request.")
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Printf("Error occoured when sending request.\n")
+		fmt.Println("Error occoured when sending request.")
 		panic(err) // handle error
 	}
 	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
+	fmt.Println("Status code:", resp.StatusCode, http.StatusText(resp.StatusCode))
+	fmt.Println("Is uncompressed:", resp.Uncompressed)
+	fmt.Println("Content-Encoding:", resp.Header.Get("Content-Encoding"))
+	tmpBody, _ := gzip.NewReader(resp.Body)
+	body, err := io.ReadAll(tmpBody)
 	if err != nil {
-		fmt.Printf("Error occoured when reading request.\n")
+		fmt.Println("Error occoured when reading gzipped response.")
 		panic(err) // handle error
 	}
-	//var Message BF1_GetMatchID
-	fmt.Printf(string(body))
-	//fmt.Printf("%s", body)
-	//json.Unmarshal([]byte(body.ToJsonString()), &Message)
-	//fmt.Printf("The most recent match id: %s", Message.data.matches[0].attributes.id)
+	return body
 }
