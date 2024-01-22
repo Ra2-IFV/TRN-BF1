@@ -33,6 +33,7 @@ func (r Request) do() (*http.Response, error) {
 	req, err := http.NewRequest(r.Method, r.URL, r.Body)
 	if err != nil {
 		slog.Error("Failed to initialize request", "error", err)
+		return nil, err
 	}
 	// https://www.runoob.com/go/go-range.html
 	for k, v := range r.Header {
@@ -42,6 +43,7 @@ func (r Request) do() (*http.Response, error) {
 	return r.client().Do(req)
 }
 
+// Read response body
 func (r Request) respBody() (io.ReadCloser, error) {
 	resp, err := r.do()
 	if err != nil {
@@ -52,9 +54,7 @@ func (r Request) respBody() (io.ReadCloser, error) {
 	return resp.Body, nil
 }
 
-// Return a decoded response body
-// PS: default http transport handles encoded response properly
-// https://pkg.go.dev/net/http#Transport
+// Read data from response body
 func (r Request) ReadRespBodyByte() ([]byte, error) {
 	body, err := r.respBody()
 	if err != nil {
