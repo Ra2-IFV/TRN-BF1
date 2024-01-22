@@ -12,10 +12,9 @@ import (
 
 // Init request struct
 type Request struct {
-	Method string
-	Header map[string]string
-	Body   io.ReadCloser
-	//Transport &http.Transport
+	Method    string
+	Header    map[string]string
+	Body      io.Reader
 	Transport http.RoundTripper
 	URL       string
 }
@@ -47,9 +46,11 @@ func (r Request) do() (*http.Response, error) {
 func (r Request) respBody() (io.ReadCloser, error) {
 	resp, err := r.do()
 	if err != nil {
-		slog.Warn("Failed to receive response", "error", err)
+		slog.Warn("Failed to get response", "error", err)
 		return nil, err
 	}
+	slog.Info("Response", "data", resp)
+	slog.Info("Response", "body", resp.Body)
 	slog.Info("Response", "Content-Encoding", resp.Header.Get("Content-Encoding"))
 	return resp.Body, nil
 }
@@ -58,9 +59,13 @@ func (r Request) respBody() (io.ReadCloser, error) {
 func (r Request) ReadRespBodyByte() ([]byte, error) {
 	body, err := r.respBody()
 	if err != nil {
-		slog.Error("Failed to read body", "error", err)
 		return nil, err
 	}
 	defer body.Close()
-	return io.ReadAll(body)
+	data, err := io.ReadAll(body)
+	if err != nil {
+		slog.Error("Failed to read body", "error", err)
+		return nil, err
+	}
+	return data, nil
 }
