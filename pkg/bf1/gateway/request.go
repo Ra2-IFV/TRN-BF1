@@ -9,7 +9,7 @@ import (
 
 func main() {}
 
-func request_post_gateway(platform string) []byte {
+func requestGateway(platform string) []byte {
 	method := "GET"
 	header := map[string]string{
 		"Content-Type": "application/json",

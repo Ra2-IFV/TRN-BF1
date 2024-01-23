@@ -31,7 +31,7 @@ func (r Request) do() (*http.Response, error) {
 	}
 	req, err := http.NewRequest(r.Method, r.URL, r.Body)
 	if err != nil {
-		slog.Error("Failed to initialize request", "error", err)
+		slog.Error("Initialize request failed", "error", err)
 		return nil, err
 	}
 	// https://www.runoob.com/go/go-range.html
@@ -46,12 +46,10 @@ func (r Request) do() (*http.Response, error) {
 func (r Request) respBody() (io.ReadCloser, error) {
 	resp, err := r.do()
 	if err != nil {
-		slog.Warn("Failed to get response", "error", err)
+		slog.Error("Get response failed", "error", err)
 		return nil, err
 	}
-	slog.Info("Response", "data", resp)
-	slog.Info("Response", "body", resp.Body)
-	slog.Info("Response", "Content-Encoding", resp.Header.Get("Content-Encoding"))
+	slog.Debug("Response", "Content-Encoding", resp.Header.Get("Content-Encoding"))
 	return resp.Body, nil
 }
 
@@ -64,7 +62,7 @@ func (r Request) ReadRespBodyByte() ([]byte, error) {
 	defer body.Close()
 	data, err := io.ReadAll(body)
 	if err != nil {
-		slog.Error("Failed to read body", "error", err)
+		slog.Error("Read reponse body failed", "error", err)
 		return nil, err
 	}
 	return data, nil
