@@ -67,5 +67,5 @@ jobs:
         # Optional. Default is 'false'
         overwrite: false
 
-      - name: Output artifact ID
-        run:  echo 'Artifact ID is ${{ steps.artifact-upload-step.outputs.artifact-id }}'
+    - name: Output artifact ID
+      run:  echo 'Artifact ID is ${{ steps.artifact-upload-step.outputs.artifact-id }}'
