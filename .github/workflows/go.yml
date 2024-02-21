@@ -64,12 +64,12 @@ jobs:
       run: go test -v -o ./build ./...
 
     - name: Upload artifacts (Linux)
-      if: runner.os == 'Linux'
+      if: ${{ runner.os }} == 'Linux'
       uses: actions/upload-artifact@v4
       with:
         # Name of the artifact to upload.
         # Optional. Default is 'artifact'
-        name: TRN-BF1_amd64-linux
+        name: TRN-BF1_${{ matrix.c_compiler }}-amd64-linux
 
         # A file, directory or wildcard pattern that describes what to upload
         # Required.
@@ -102,10 +102,10 @@ jobs:
         overwrite: false
         
     - name: Upload artifacts (Windows)
-      if: runner.os == 'Windows'
+      if: ${{ runner.os }} == 'Windows'
       uses: actions/upload-artifact@v4
       with:
-        name: TRN-BF1_${{ matrix.c_compiler }}-amd64_windows
+        name: TRN-BF1_${{ matrix.c_compiler }}-amd64-windows
         path: ./build
         if-no-files-found: warn
         retention-days: 90
